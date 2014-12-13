@@ -164,7 +164,8 @@ int dvb_initialise_system(void)
        (m_cfg.tx_hardware == HW_EXPRESS_AUTO)||
        (m_cfg.tx_hardware == HW_EXPRESS_8)||
        (m_cfg.tx_hardware == HW_EXPRESS_TS)||
-       (m_cfg.tx_hardware == HW_EXPRESS_UDP))
+       (m_cfg.tx_hardware == HW_EXPRESS_UDP)||
+       (m_cfg.tx_hardware == HW_UHD))
     {
         res = pthread_create( &dvb_thread[0], NULL, dvb_task_transmit, NULL );
         if( res!= 0 )

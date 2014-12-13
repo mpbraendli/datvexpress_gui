@@ -195,6 +195,7 @@ void MainWindow::InitialUpdateDisplayedDVBParams(void)
     ui->comboBoxTransmitterHWType->addItem(S_EXPRESS_8);
     ui->comboBoxTransmitterHWType->addItem(S_EXPRESS_TS);
     ui->comboBoxTransmitterHWType->addItem(S_EXPRESS_UDP);
+    ui->comboBoxTransmitterHWType->addItem(S_UHD);
 
 
     // DVB Mode
@@ -654,6 +655,8 @@ void MainWindow::on_pushButtonApplyVideoCapture_clicked()
         dvb_set_tx_hardware_type( HW_EXPRESS_TS, S_EXPRESS_TS );
     if( str == S_EXPRESS_UDP )
         dvb_set_tx_hardware_type( HW_EXPRESS_UDP, S_EXPRESS_UDP );
+    if( str == S_UHD )
+        dvb_set_tx_hardware_type( HW_UHD, S_UHD );
     // Audio device
     st[0] = ui->comboBoxAudioCaptureDevice->currentText();
     dvb_set_audio_capture_device( st[0].toLatin1() );

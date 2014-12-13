@@ -34,6 +34,7 @@ unix{
 LIBS += -lfftw -lpthread
 LIBS += -lavdevice -lavresample -lavformat -lavcodec -lavutil -lswscale -lmp3lame -lavfilter -lz -lrt -lbz2
 LIBS += -lasound
+LIBS += -luhd
 
 INCLUDEPATH += Sources
 
@@ -109,7 +110,8 @@ SOURCES += main.cpp \
     Sources/si570.cpp \
     DVB-T/dvb_t_lpf.cpp \
     Sources/dvb_buffer.cpp \
-    capturedialog.cpp
+    capturedialog.cpp \
+    Sources/uhd.cpp
 HEADERS += mainwindow.h \
     Sources/dvb_gui_if.h \
     Sources/dvb_config.h \
@@ -129,5 +131,6 @@ HEADERS += mainwindow.h \
     Sources/dvb_s2_if.h \
     Sources/express.h \
     Sources/tx_hardware.h \
-    DVB-T/dvb_t.h
+    DVB-T/dvb_t.h \
+    Sources/uhd.h
 OTHER_FILES  +=  dvb_t_sym.h

@@ -4,6 +4,7 @@
 
 #include <limits.h>
 #include "dvb_options.h"
+#include <stdint.h>
 #include "express.h"
 #include "dvb_gen.h"
 #include "dvb_config.h"
@@ -28,6 +29,7 @@
 #define S_EXPRESS_8  "Express 8 bit"
 #define S_EXPRESS_TS "Express TS"
 #define S_EXPRESS_UDP "Express UDP"
+#define S_UHD "UHD USRP"
 #define S_USRP2    "USRP2"
 #define S_NONE     "NONE"
 #define S_DIGILITE "Digilite"

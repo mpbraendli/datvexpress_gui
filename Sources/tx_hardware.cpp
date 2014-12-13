@@ -8,6 +8,7 @@
 #include "dvb.h"
 #include "dvb_uhd.h"
 #include "dvb_gen.h"
+#include "uhd.h"
 
 static double m_tx_rate;
 static sys_config m_config;
@@ -47,7 +48,14 @@ void hw_thread( void )
 
     if( b->type == BUF_TS )
     {
-        express_send_dvb_buffer( b );
+        if (m_config.tx_hardware == HW_UHD)
+        {
+            logger("No BUF_TS with HW_UHD supported!");
+        }
+        else
+        {
+            express_send_dvb_buffer( b );
+        }
         return;
     }
 
@@ -61,8 +69,15 @@ void hw_thread( void )
     {
         if( b->len > 0 )
         {
-            // This will block on the USB queue until done
-            express_send_dvb_buffer( b );
+            if (m_config.tx_hardware == HW_UHD)
+            {
+                uhd_send_dvb_buffer(b);
+            }
+            else
+            {
+                // This will block on the USB queue until done
+                express_send_dvb_buffer( b );
+            }
         }
     }
 }
@@ -78,7 +93,14 @@ double hw_uniterpolated_sample_rate(void)
 //
 double hw_outstanding_queue_size( void )
 {
-    return express_outstanding_queue_size();
+    if (m_config.tx_hardware == HW_UHD)
+    {
+        return 0;
+    }
+    else
+    {
+        return express_outstanding_queue_size();
+    }
 }
 
 //
@@ -94,6 +116,9 @@ void hw_freq( double freq )
         express_set_freq( freq );
         break;
     case HW_EXPRESS_TS:
+        break;
+    case HW_UHD:
+        uhd_set_freq(freq);
         break;
     }
     // select the right amplifiers etc
@@ -111,6 +136,9 @@ void hw_level( float gain )
         break;
     case HW_EXPRESS_TS:
         break;
+    case HW_UHD:
+        uhd_set_level(gain);
+        break;
     }
 }
 
@@ -124,6 +152,9 @@ void hw_sample_rate( double rate )
         express_set_sr( rate );
         break;
     case HW_EXPRESS_TS:
+        break;
+    case HW_UHD:
+        uhd_set_sr(rate);
         break;
     }
 }
@@ -140,6 +171,10 @@ void hw_config( double freq, float lvl)
         express_set_level((int)lvl);
         break;
     case HW_EXPRESS_TS:
+        break;
+    case HW_UHD:
+        uhd_set_freq(freq);
+        uhd_set_level(lvl);
         break;
     }
 }
@@ -179,9 +214,15 @@ void hw_set_interp_and_filter( int rate )
             express_set_filter( 3 );
         }
     }
+    else if (m_config.tx_hardware == HW_UHD)
+    {
+        // TODO
+    }
 }
 int hw_set_dvbt_sr( double &srate )
 {
+    assert(m_config.tx_hardware != HW_UHD);
+
     int irate;
     srate = dvb_t_get_sample_rate();
     irate = express_set_sr(srate);
@@ -192,8 +233,11 @@ void hw_setup_channel(void)
     int irate = 0;
     double srate = 0;
 
-    // Put the FPGA into a known state
-    express_fpga_reset();
+    if (m_config.tx_hardware != HW_UHD)
+    {
+        // Put the FPGA into a known state
+        express_fpga_reset();
+    }
 
     // Call the right configuration dependent on hardware
     if((m_config.tx_hardware == HW_EXPRESS_16)   ||
@@ -225,6 +269,13 @@ void hw_setup_channel(void)
             irate = hw_set_dvbt_sr( srate );
             hw_set_interp_and_filter( irate );
         }
+    }
+    else if (m_config.tx_hardware == HW_UHD)
+    {
+        srate = dvb_t_get_sample_rate();
+        loggerf("Calculated DVB-T Rate: %f", srate);
+        irate = uhd_set_sr(srate);
+        hw_set_interp_and_filter( irate );
     }
     m_tx_rate = srate;
 }
@@ -262,6 +313,13 @@ int hw_tx_init( void )
             hw_setup_channel();
         }
         break;
+    case HW_UHD:
+        res = uhd_init();
+        if (res==0)
+        {
+            res = EXP_OK;
+            hw_setup_channel();
+        }
     }
     m_carrier = 0;
     return res;
@@ -269,12 +327,19 @@ int hw_tx_init( void )
 
 void hw_set_carrier( int status )
 {
-    if(status)
-        express_set_carrier(true);
+    if (m_config.tx_hardware == HW_UHD)
+    {
+        m_carrier = false;
+    }
     else
-        express_set_carrier(false);
+    {
+        if(status)
+            express_set_carrier(true);
+        else
+            express_set_carrier(false);
 
-    m_carrier = status;
+        m_carrier = status;
+    }
 }
 
 int hw_get_carrier( void )
@@ -301,5 +366,10 @@ void hw_rx( void )
 }
 void hw_load_calibration( void )
 {
-    express_load_calibration();
+    if((m_config.tx_hardware == HW_EXPRESS_16) ||
+       (m_config.tx_hardware == HW_EXPRESS_AUTO) ||
+       (m_config.tx_hardware == HW_EXPRESS_8) )
+    {
+        express_load_calibration();
+    }
 }

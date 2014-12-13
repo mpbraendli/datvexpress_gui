@@ -174,6 +174,11 @@ void dvb_tx_encode_and_transmit_tp_raw( uchar *tp )
     case HW_EXPRESS_UDP:
         if( m_info.dvb_mode == MODE_DVBS ) write_final_tx_queue_udp( tp );
         break;
+    case HW_UHD:
+        if( m_info.dvb_mode == MODE_DVBS )  dvb_tx_transmit_tp_dvbs( tp );
+        if( m_info.dvb_mode == MODE_DVBS2 ) dvb_tx_encode_and_transmit_tp_dvbs2( tp );
+        if( m_info.dvb_mode == MODE_DVBT )  dvb_tx_encode_and_transmit_tp_dvbt( tp );
+        break;
     default:
         break;
         }
